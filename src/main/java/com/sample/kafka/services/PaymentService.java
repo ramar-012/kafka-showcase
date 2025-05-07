@@ -44,6 +44,7 @@ public class PaymentService {
         Long orderId = extractOrderId(message);
         if (orderId == null) {
             log.error("Invalid order message format: {}", message);
+            System.out.println("Invalid order message format: " + message);
             return;
         }
 

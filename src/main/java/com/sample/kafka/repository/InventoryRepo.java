@@ -6,6 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface InventoryRepo extends JpaRepository<Inventory, Long> {
-    // method to get maximum of order ID in inventory table
-    Long findMaxOrderId();
 }
