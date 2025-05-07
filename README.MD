@@ -30,35 +30,38 @@ A simple **Spring Boot Proof of Concept (POC)** demonstrating asynchronous, even
 - Move the extracted folder from `Downloads` to `C:\` (Windows C drive).
 - Open the terminal, navigate to the Kafka folder, and run it using the following commands.
 
-
 **i. Start Zookeeper**
 
 ```
-.\zookeeper-server-start.bat ..\config\zookeeper.properties
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
 ```
 **ii. Start Kafka broker**
 ```
-.\kafka-server-start.bat ..\config\server.properties
+.\bin\windows\kafka-server-start.bat .\config\server.properties
 ```
 **iii. Create a topic manually (if needed)**
 ```
 .\kafka-topics.bat --create --topic order-created --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 ```
+
+- ***Note***: If you encounter the wmic error `'wmic' is not recognized as an internal or external command` while attempting to start Kafka, then run :
+  `$env:KAFKA_HEAP_OPTS="-Xmx512M -Xms256M"` to exclude kafka's wmic dependency which is no longer supported in Windows 11, and try running Kafka again.
 ---
 ### Kafka set up (Docker)
-- Create a docker-compose.yml file to be used by Docker Compose to define, run zookeeper and kafka container Docker applications.
+- Create a docker-compose.yml file to be used by Docker Compose to define, run zookeeper and kafka container in Docker application.
 - Run the containers: `docker-compose up -d`
 - Verify if the containers have started running: `docker ps`
 - Verify the topics
 ```bash
 docker exec -it kafka kafka-topics --bootstrap-server localhost:9092 --list
 ```
-- Create a topic manually if needed
+-  Create a topic manually (if needed)
 ```bash
 docker exec -it kafka kafka-topics --create --topic order-created --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
 ```
+- Open Docker Desktop app, navigate to Containers section and verify if zookeeper and kafka containers are running.
 ---
-### 📘 API Endpoints
+### API Endpoints
 
 | Method | Endpoint             | Description                                               |
 |--------|----------------------|-----------------------------------------------------------|
@@ -75,7 +78,3 @@ docker exec -it kafka kafka-topics --create --topic order-created --bootstrap-se
 
 ## License
 This project is free to use for learning and demonstration purposes.
-
-
-
-
