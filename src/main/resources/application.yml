@@ -21,6 +21,8 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+    streams:
+      application-id: order-stream-app
     consumer:
       group-id: kaf-group
       auto-offset-reset: earliest

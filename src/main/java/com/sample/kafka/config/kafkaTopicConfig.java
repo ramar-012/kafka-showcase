@@ -31,4 +31,14 @@ public class kafkaTopicConfig {
     public NewTopic orderPartitionTopic(){
         return new NewTopic(kafkaTopics.ORDER_PARTITION, 7, (short) 1);
     }
+
+    @Bean
+    public NewTopic orderCreatedDLTTopic(){
+        return new NewTopic(kafkaTopics.ORDER_CREATED_DLT, 3, (short) 1);
+    }
+
+    @Bean
+    public NewTopic NewTopic(){
+        return new NewTopic(kafkaTopics.ORDERS, 3, (short) 1);
+    }
 }

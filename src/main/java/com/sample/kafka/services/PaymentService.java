@@ -40,6 +40,13 @@ public class PaymentService {
     @KafkaListener(topics = kafkaTopics.ORDER_CREATED, groupId = "payment-service-group")
     public void processPayment(ConsumerRecord<String, String> record) {
         String message = record.value();
+
+        // simulate failed payment for kafka reprocessing message
+        if (record.value().toLowerCase().contains("failpayment")) {
+            throw new RuntimeException("Simulated failure");
+        }
+
+
         log.info("Received order event for payment: {}", message);
         Long orderId = extractOrderId(message);
         if (orderId == null) {
@@ -75,8 +82,27 @@ public class PaymentService {
         String topicToSend = paymentStatus.equals("COMPLETED") ? kafkaTopics.PAYMENT_DONE : kafkaTopics.PAYMENT_FAIL;
 
         kafkaTemplate.send(topicToSend, resultMessage);
+        if(topicToSend.equals(kafkaTopics.PAYMENT_DONE)){
+            log.info("Payment for the ID: {} is completed, and sending Order to stream.", orderId);
+            String info = "Payment completed for order: " + orderId + ", with status as paid.";
+            kafkaTemplate.send(kafkaTopics.ORDERS, order.getCategory(), info);
+        }
 
         log.info("Payment status sent to {}: {}", topicToSend, resultMessage);
+    }
+
+    @KafkaListener(topics = kafkaTopics.ORDER_CREATED_DLT, groupId = "payment-service-group")
+    public void catchDLT(ConsumerRecord<String, String> record) {
+        String message = record.value();
+        log.info("Received message from Dead Letter Topic: {}", message);
+        // Handle the DLT message as needed
+
+        // for now fix the message and send it back to order-created topic
+        Long orderId = extractOrderId(message);
+        String category = record.key();
+        String value = "Retry payment for order: " + orderId;
+        log.info("Fixed the message of DLT order: {} and resending the order with message: {}", orderId, value);
+        kafkaTemplate.send(kafkaTopics.ORDER_CREATED, category, value);
     }
 
     private Long extractOrderId(String message) {
@@ -119,10 +145,12 @@ public class PaymentService {
     }
 
     private void sendToExternalWebhook(Order order, Inventory inventory) {
-        String externalApiUrl = kafkaTopics.EXTERNAL_URI;
+        String externalApiUrl = kafkaTopics.NOW_STREAM_API;
 
         String payload = "{"
                 + "\"order_id\": \"" + order.getId() + "\","
+                + "\"customer_name\": \"" + order.getCustomerName() + "\","
+                + "\"category\": \"" + order.getCategory() + "\","
                 + "\"product_name\": \"" + inventory.getProductName() + "\","
                 + "\"stock_quantity\": " + inventory.getStockQuantity() + ","
                 + "\"status\": \"Ready for Shipping\""

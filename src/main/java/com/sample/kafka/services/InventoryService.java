@@ -57,7 +57,7 @@ public class InventoryService {
         String product;
 
         switch (category) {
-            case Categories.ELECTRONICS -> product = getRandomProduct(Products.ELECTRONICS); //processing logic
+            case Categories.ELECTRONICS -> product = getRandomProduct(Products.ELECTRONICS);
             case Categories.CLOTHING -> product = getRandomProduct(Products.CLOTHING);
             case Categories.TRADING -> product = getRandomProduct(Products.TRADING);
             case Categories.FURNITURE -> product = getRandomProduct(Products.FURNITURE);
@@ -82,5 +82,12 @@ public class InventoryService {
 
     private String getRandomProduct(List<String> products) {
         return products.get(RANDOM.nextInt(products.size()));
+    }
+
+    // this consumer is integrated with electronics filter factory
+    @KafkaListener(topics = {kafkaTopics.ORDER_CREATED, kafkaTopics.ORDER_PARTITION}, groupId = "electronics-filter-group", containerFactory = "electronicsFilterContainerFactory")
+    public void consumeElectronics(ConsumerRecord<String, String> record) {
+        log.info("Electronics Filter Consumer | Consumed message: {}", record.value());
+        // electronics processing logic
     }
 }

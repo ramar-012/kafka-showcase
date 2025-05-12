@@ -19,6 +19,6 @@ public class PartitionCategory {
         if(Categories.TRADING.equals(category)){
             return TRADING.get(new Random().nextInt(TRADING.size()));
         }
-        return CATEGORY_PARTITION_MAP.getOrDefault(category, 0);
+        return CATEGORY_PARTITION_MAP.get(category);
     }
 }
