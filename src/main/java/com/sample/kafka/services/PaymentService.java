@@ -48,14 +48,13 @@ public class PaymentService {
 
 
         log.info("Received order event for payment: {}", message);
-        Long orderId = extractOrderId(message);
+        Long orderId = kafkaTopics.extractOrderId(message);
         if (orderId == null) {
             log.error("Invalid order message format: {}", message);
             System.out.println("Invalid order message format: " + message);
             return;
         }
 
-        // wait for 5 seconds to simulate payment processing, since test database is slow to save orders
         try {
             log.info("Simulating payment process for Order ID: {}", orderId);
             Thread.sleep(5000);
@@ -79,16 +78,16 @@ public class PaymentService {
         payment.setPaymentDate(new Date());
         paymentRepo.save(payment);
         String resultMessage = "Payment " + paymentStatus + " for Order ID: " + orderId;
-        String topicToSend = paymentStatus.equals("COMPLETED") ? kafkaTopics.PAYMENT_DONE : kafkaTopics.PAYMENT_FAIL;
+//        String topicToSend = paymentStatus.equals("COMPLETED") ? kafkaTopics.PAYMENT_DONE : kafkaTopics.PAYMENT_FAIL;
 
-        kafkaTemplate.send(topicToSend, resultMessage);
-        if(topicToSend.equals(kafkaTopics.PAYMENT_DONE)){
-            log.info("Payment for the ID: {} is completed, and sending Order to stream.", orderId);
-            String info = "Payment completed for order: " + orderId + ", with status as paid.";
+        if(paymentStatus.equals("COMPLETED")){
+            log.info("Payment for the ID: {} is completed, and sending Order to stream for delivery/external.", orderId);
+            String info = "Payment completed with status paid for ID: " + orderId;
             kafkaTemplate.send(kafkaTopics.ORDERS, order.getCategory(), info);
+        } else {
+            kafkaTemplate.send(kafkaTopics.PAYMENT_FAIL, resultMessage);
         }
 
-        log.info("Payment status sent to {}: {}", topicToSend, resultMessage);
     }
 
     @KafkaListener(topics = kafkaTopics.ORDER_CREATED_DLT, groupId = "payment-service-group")
@@ -98,70 +97,61 @@ public class PaymentService {
         // Handle the DLT message as needed
 
         // for now fix the message and send it back to order-created topic
-        Long orderId = extractOrderId(message);
+        Long orderId = kafkaTopics.extractOrderId(message);
         String category = record.key();
         String value = "Retry payment for order: " + orderId;
         log.info("Fixed the message of DLT order: {} and resending the order with message: {}", orderId, value);
         kafkaTemplate.send(kafkaTopics.ORDER_CREATED, category, value);
     }
 
-    private Long extractOrderId(String message) {
-        try {
-            String[] parts = message.split(":");
-            return Long.parseLong(parts[1].trim());
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    @KafkaListener(topics = kafkaTopics.PAYMENT_DONE, groupId = "payment-service-group")
-    public void handleCompletedPayment(ConsumerRecord<String, String> record) {
-        String message = record.value();
-        String category = record.key();
-        String topic = record.topic();
-        log.info("Received payment COMPLETED event for webhook: {}", message);
-        Long orderId = extractOrderId(message);
-
-        if (orderId == null) {
-            log.error("Invalid payment COMPLETED message format: {}", message);
-            return;
-        }
-
-        Optional<Order> optionalOrder = orderRepo.findById(orderId);
-        if (optionalOrder.isEmpty()) {
-            log.error("Order not found for ID: {}", orderId);
-            return;
-        }
-
-        Order order = optionalOrder.get();
-        Optional<Inventory> optionalInventory = inventoryRepo.findById(orderId);
-        if (optionalInventory.isEmpty()) {
-            // Handle the case where inventory is not found
-            log.error("Inventory not found for Order ID: {}", orderId);
-            return;
-        }
-        Inventory inventory = optionalInventory.get();
-        sendToExternalWebhook(order, inventory);
-    }
-
-    private void sendToExternalWebhook(Order order, Inventory inventory) {
-        String externalApiUrl = kafkaTopics.NOW_STREAM_API;
-
-        String payload = "{"
-                + "\"order_id\": \"" + order.getId() + "\","
-                + "\"customer_name\": \"" + order.getCustomerName() + "\","
-                + "\"category\": \"" + order.getCategory() + "\","
-                + "\"product_name\": \"" + inventory.getProductName() + "\","
-                + "\"stock_quantity\": " + inventory.getStockQuantity() + ","
-                + "\"status\": \"Ready for Shipping\""
-                + "}";
-
-        RestTemplate restTemplate = new RestTemplate();
-        try {
-            restTemplate.postForObject(externalApiUrl, payload, String.class);
-            log.info("Sent order and inventory details to external system: {}", payload);
-        } catch (Exception e){
-            log.error("Failed to send order details to delivery agent: {}", e.getMessage());
-        }
-    }
+    //TODO: Since kafka streams are used, disabled this for now.
+//    @KafkaListener(topics = kafkaTopics.PAYMENT_DONE, groupId = "payment-service-group")
+//    public void handleCompletedPayment(ConsumerRecord<String, String> record) {
+//        String message = record.value();
+//        String category = record.key();
+//        String topic = record.topic();
+//        Long orderId = kafkaTopics.extractOrderId(message);
+//
+//        if (orderId == null) {
+//            log.error("Invalid payment COMPLETED message format: {}", message);
+//            return;
+//        }
+//
+//        Optional<Order> optionalOrder = orderRepo.findById(orderId);
+//        if (optionalOrder.isEmpty()) {
+//            log.error("Order not found for ID: {}", orderId);
+//            return;
+//        }
+//
+//        Order order = optionalOrder.get();
+//        Optional<Inventory> optionalInventory = inventoryRepo.findById(orderId);
+//        if (optionalInventory.isEmpty()) {
+//            // Handle the case where inventory is not found
+//            log.error("Inventory not found for Order ID: {}", orderId);
+//            return;
+//        }
+//        Inventory inventory = optionalInventory.get();
+//        sendToExternalWebhook(order, inventory);
+//    }
+//
+//    private void sendToExternalWebhook(Order order, Inventory inventory) {
+//        String externalApiUrl = kafkaTopics.NOW_STREAM_API;
+//
+//        String payload = "{"
+//                + "\"order_id\": \"" + order.getId() + "\","
+//                + "\"customer_name\": \"" + order.getCustomerName() + "\","
+//                + "\"category\": \"" + order.getCategory() + "\","
+//                + "\"product_name\": \"" + inventory.getProductName() + "\","
+//                + "\"stock_quantity\": " + inventory.getStockQuantity() + ","
+//                + "\"status\": \"Ready for Shipping\""
+//                + "}";
+//
+//        RestTemplate restTemplate = new RestTemplate();
+//        try {
+//            restTemplate.postForObject(externalApiUrl, payload, String.class);
+//            log.info("Sent order and inventory details to external system: {}", payload);
+//        } catch (Exception e){
+//            log.error("Failed to send order details to delivery agent: {}", e.getMessage());
+//        }
+//    }
 }

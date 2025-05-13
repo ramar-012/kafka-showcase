@@ -42,7 +42,7 @@ public class InventoryService {
         processInventory(record);
     }
 
-    @KafkaListener(topics = kafkaTopics.ORDER_PARTITION, groupId = "inventory-service-group")
+    @KafkaListener(topics = {kafkaTopics.ORDER_PARTITION}, groupId = "inventory-service-group")
     public void consumeOrderEventPartition3(ConsumerRecord<String, String> record) {
         String topic = record.topic();
         String category = record.key();

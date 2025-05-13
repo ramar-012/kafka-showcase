@@ -46,12 +46,10 @@ public class OrderService {
     public String sendPartitionSpecific(Order newOrder){
         // send category and hard partitioning to message
         String category = newOrder.getCategory();
-        String message = "Order created: " + newOrder.getId();
         String newMessage = "Order created for " + category + " category: " + newOrder.getId();
         int partition = PartitionCategory.getPartitionForCategory(category);
         kafkaTemplate.send(kafkaTopics.ORDER_PARTITION, partition, category, newMessage);
 
-        log.info("Message sent to the topics: " + kafkaTopics.ORDER_PARTITION + ": {}", message);
         return "Order successfully sent to the category: " + category + " and it's partition: " + partition;
     }
 

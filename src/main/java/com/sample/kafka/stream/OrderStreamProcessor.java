@@ -24,8 +24,7 @@ public class OrderStreamProcessor {
 
         stream.filter((key, value) -> value != null && value.contains("paid"))
                 .peek((key, value) -> {
-                    System.out.println("Filtered Paid Order: " + value);
-//                    log.info("Filtered Paid Order: {}", value);
+                    System.out.println("Filtered paid order to stream: " + key + " with value: " + value);
                     externalOrderService.sendOrderToExternalService(value);
                 });
 

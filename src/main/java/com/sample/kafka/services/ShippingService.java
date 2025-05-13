@@ -25,9 +25,8 @@ public class ShippingService {
 
     @KafkaListener(topics = kafkaTopics.PAYMENT_DONE, groupId = "shipping-service-group")
     public void processShipmentOnPaymentSuccess(String message) {
-        log.info("ShippingService received payment success: {}", message);
 
-        Long orderId = extractOrderId(message);
+        Long orderId = kafkaTopics.extractOrderId(message);
         if (orderId != null) {
             Optional<Order> orderOptional = orderRepo.findById(orderId);
             if (orderOptional.isPresent()) {
@@ -38,7 +37,7 @@ public class ShippingService {
                 shipment.setShipmentDate(new Date());
                 shipmentRepo.save(shipment);
 
-                log.info("Shipment created for Order ID: {}", orderId);
+                log.info("Shipment done for Order ID: {}", orderId);
             } else {
                 log.error("Order not found for ID: {}", orderId);
             }
@@ -47,9 +46,9 @@ public class ShippingService {
 
     @KafkaListener(topics = kafkaTopics.PAYMENT_FAIL, groupId = "shipping-service-group")
     public void handleFailedPayment(String message) {
-        log.info("ShippingService received payment failure: " + message);
+        log.info("ShippingService received payment failure: {}", message);
 
-        Long orderId = extractOrderId(message);
+        Long orderId = kafkaTopics.extractOrderId(message);
         if (orderId != null) {
             Optional<Order> orderOptional = orderRepo.findById(orderId);
             if (orderOptional.isPresent()) {
@@ -67,14 +66,5 @@ public class ShippingService {
         }
     }
 
-    private Long extractOrderId(String message) {
-        try {
-            String[] parts = message.split(":");
-            return Long.parseLong(parts[1].trim());
-        } catch (Exception e) {
-            log.error("Invalid message format: {}", message);
-            return null;
-        }
-    }
 }
 
