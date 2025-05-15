@@ -38,7 +38,12 @@ public class kafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic NewTopic(){
+    public NewTopic OrderStreamTopic(){
         return new NewTopic(kafkaTopics.ORDERS, 3, (short) 1);
+    }
+
+    @Bean
+    public NewTopic ShipmentDoneTopic(){
+        return new NewTopic(kafkaTopics.SHIPMENT_DONE, 1, (short) 1);
     }
 }

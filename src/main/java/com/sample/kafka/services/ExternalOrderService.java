@@ -48,6 +48,7 @@ public class ExternalOrderService {
 //                .subscribe();
 //    }
     public void sendOrderToExternalService(String message) {
+        Long orderId = kafkaTopics.extractOrderId(message);
         RestTemplate restTemplate = new RestTemplate();
         // send the stream data to the external system
         List<String> urls = List.of(
@@ -72,7 +73,7 @@ public class ExternalOrderService {
         ResponseEntity<String> res = restTemplate.postForEntity(externalApiUrl, payload, String.class);
         if(res.getStatusCode() == HttpStatus.OK){
             log.info("Order successfully sent to delivery system.");
-            kafkaTemplate.send(kafkaTopics.PAYMENT_DONE, message);
+            kafkaTemplate.send(kafkaTopics.PAYMENT_DONE, String.valueOf(orderId), message);
         } else {
             System.out.println("Order failed to send to external system.");
         }

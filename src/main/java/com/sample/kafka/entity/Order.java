@@ -26,18 +26,22 @@ public class Order {
     @Column(name = "order_date")
     private Date orderDate;
 
+    @Column(name = "order_status")
+    private String orderStatus;
+
     // Default constructor
     public Order() {
     }
 
     // Constructor with all fields
-    public Order(Long id, String customerName, Date orderDate, String category, BigDecimal totalAmount, String status) {
+    public Order(Long id, String customerName, Date orderDate, String category, BigDecimal totalAmount, String status, String orderStatus) {
         this.id = id;
         this.customerName = customerName;
         this.category = category;
         this.totalAmount = totalAmount;
         this.status = status;
         this.orderDate = orderDate;
+        this.orderStatus = orderStatus;
     }
 
     // Getters and Setters
@@ -87,5 +91,13 @@ public class Order {
 
     public void setOrderDate(Date orderDate) {
         this.orderDate = orderDate;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }

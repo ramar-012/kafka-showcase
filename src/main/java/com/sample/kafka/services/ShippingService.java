@@ -7,6 +7,7 @@ import com.sample.kafka.repository.ShipmentRepo;
 import com.sample.kafka.utils.kafkaTopics;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -20,6 +21,9 @@ public class ShippingService {
 
     @Autowired
     private OrderRepo orderRepo;
+
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShippingService.class);
 
@@ -38,6 +42,8 @@ public class ShippingService {
                 shipmentRepo.save(shipment);
 
                 log.info("Shipment done for Order ID: {}", orderId);
+                String newMessage = "Shipment completed for the ID: " + orderId;
+                kafkaTemplate.send(kafkaTopics.SHIPMENT_DONE, String.valueOf(orderId), newMessage);
             } else {
                 log.error("Order not found for ID: {}", orderId);
             }
