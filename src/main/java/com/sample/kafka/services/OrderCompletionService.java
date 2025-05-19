@@ -30,4 +30,21 @@ public class OrderCompletionService {
             log.warn("Order not found for ID {} to update it as COMPLETED.", orderId);
         }
     }
+
+    public void markOrderFailed(Long orderId, String combinedValue){
+        if (!combinedValue.contains(String.valueOf(orderId))){
+            log.error("Mismatch in orderId within joined message for key {}", orderId);
+            return;
+        }
+
+        Optional<Order> optionalOrder = orderRepo.findById(orderId);
+        if(optionalOrder.isPresent()){
+            Order order = optionalOrder.get();
+            order.setOrderStatus("FAILED");
+            orderRepo.save(order);
+            log.info("Order status updated to FAILED for ID: {}", orderId);
+        } else{
+            log.warn("Order not found for ID {} to update it as COMPLETED.", orderId);
+        }
+    }
 }

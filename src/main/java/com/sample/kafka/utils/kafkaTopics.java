@@ -13,6 +13,7 @@ public class kafkaTopics {
     public static final String ORDER_CREATED_DLT = "order-created-dlt"; // dead letter topic
     public static final String ORDERS = "orders"; // stream orders
     public static final String SHIPMENT_DONE = "shipment-completed";
+    public static final String SHIPMENT_FAILED  = "shipment-failed";
     public static final String EXTERNAL_URI = "https://webhook.site/8deb6381-d7a8-4919-ba25-bdbd0f9e5d71"; //TODO: to be removed as this link may expire soon
     public static final String STREAM_URI = "http://localhost:8080/api/kafka/orders/external-orders";
     public static final String NOW_STREAM_API = "https://kafka-stream.free.beeceptor.com";

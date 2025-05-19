@@ -46,4 +46,9 @@ public class kafkaTopicConfig {
     public NewTopic ShipmentDoneTopic(){
         return new NewTopic(kafkaTopics.SHIPMENT_DONE, 1, (short) 1);
     }
+
+    @Bean
+    public NewTopic ShipmentFailedTopic(){
+        return new NewTopic(kafkaTopics.SHIPMENT_FAILED, 1, (short) 1);
+    }
 }

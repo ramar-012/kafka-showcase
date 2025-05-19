@@ -66,6 +66,8 @@ public class ShippingService {
                 shipmentRepo.save(shipment);
 
                 log.info("Shipment marked as FAILED for Order ID: {}", orderId);
+                String newMessage = "Shipment failed for the ID: " + orderId;
+                kafkaTemplate.send(kafkaTopics.SHIPMENT_FAILED, String.valueOf(orderId), newMessage);
             } else {
                 log.error("Order not found for ID: {}", orderId);
             }

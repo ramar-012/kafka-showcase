@@ -85,7 +85,8 @@ public class PaymentService {
             String info = "Payment completed with status paid for ID: " + orderId;
             kafkaTemplate.send(kafkaTopics.ORDERS, order.getCategory(), info);
         } else {
-            kafkaTemplate.send(kafkaTopics.PAYMENT_FAIL, resultMessage);
+            kafkaTemplate.send(kafkaTopics.PAYMENT_FAIL, String.valueOf(orderId), resultMessage);
+
         }
 
     }
